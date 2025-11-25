@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Khatarnak — All Effects Form</title>
+  <style>
+    /* Reset & root */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
+    :root{
+      --bg1:#030417; --bg2:#0b1226; --glass: rgba(255,255,255,0.04);
+      --accent1:#ff4d6d; --accent2:#ffd166; --accent3:#6ee7b7; --accent4:#60a5fa;
+      --neon1: #7c4dff; --neon2: #00e5ff;
+    }
+    html,body{height:100%}
+    body{
+      min-height:100vh;background:linear-gradient(180deg,var(--bg1),var(--bg2));display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;color:white
+    }
+
+    /* Background canvas for particles/confetti */
+    canvas#particles{position:fixed;inset:0;z-index:0}
+
+    /* Main container */
+    .wrap{position:relative;z-index:2;width:100%;max-width:1100px;margin:auto}
+    .card{position:relative;display:grid;grid-template-columns:420px 1fr;gap:26px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:18px;padding:22px;box-shadow:0 10px 50px rgba(2,6,23,0.7);backdrop-filter: blur(10px);overflow:hidden}
+
+    /* Left info */
+    .left{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+    .logo{width:72px;height:72px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.05)}
+    .logo img{width:100%;height:100%;object-fit:cover}
+    .headline{font-size:22px;font-weight:800;background:linear-gradient(90deg,var(--accent4),var(--accent1));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .animated-title{font-size:28px;font-weight:900;line-height:1.05;background:linear-gradient(90deg,#ff7a9a,#ffd166,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;animation:slideGradient 4s linear infinite}
+    @keyframes slideGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+    .sub{color:rgba(255,255,255,0.75);font-size:13px}
+    .features{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .feature{display:flex;gap:10px;align-items:center;color:rgba(255,255,255,0.9)}
+    .dot{width:12px;height:12px;border-radius:4px;background:linear-gradient(135deg,var(--accent1),var(--accent4))}
+
+    /* Right: form area */
+    .right{padding:18px 24px;position:relative;overflow:visible}
+    .toggle{display:flex;width:220px;background:rgba(255,255,255,0.03);border-radius:999px;padding:6px;gap:6px;margin-bottom:10px}
+    .toggle button{flex:1;padding:8px;border-radius:999px;border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-weight:700}
+    .toggle button.active{background:linear-gradient(90deg,var(--neon1),var(--neon2));color:#021023;box-shadow:0 8px 30px rgba(124,77,255,0.12)}
+
+    form{display:flex;flex-direction:column;gap:12px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{font-size:13px;color:rgba(255,255,255,0.85);margin-bottom:6px}
+    input[type=text],input[type=email],input[type=password],input[type=tel],select,textarea{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.06);padding:12px 14px;border-radius:12px;color:white;outline:none;font-size:14px;transition:all .28s cubic-bezier(.2,.9,.3,1);box-shadow:0 6px 18px rgba(2,6,23,0.5) inset}
+    input::placeholder, textarea::placeholder{color:rgba(255,255,255,0.35)}
+    input:focus, textarea:focus, select:focus{border-color:rgba(255,255,255,0.18);transform:translateY(-4px);box-shadow:0 20px 50px rgba(96,165,250,0.06),0 2px 0 rgba(255,255,255,0.02) inset}
+
+    /* Neon glow for focused element */
+    .neon-focus{box-shadow:0 8px 40px rgba(96,165,250,0.06), 0 0 18px rgba(124,77,255,0.12);border:1px solid rgba(124,77,255,0.25)}
+
+    /* Floating label */
+    .field{position:relative}
+    .field .floating{position:absolute;left:14px;top:12px;font-size:12px;color:rgba(255,255,255,0.6);pointer-events:none;transition:all .22s ease}
+    .field input:focus + .floating, .field input:not(:placeholder-shown) + .floating, .field textarea:focus + .floating, .field textarea:not(:placeholder-shown) + .floating, .field select:focus + .floating, .field select:not([value=""]) + .floating{transform:translateY(-26px) scale(.92);opacity:0.95;color:var(--accent4)}
+
+    /* OTP fields */
+    .otp{display:flex;gap:8px}
+    .otp input{width:56px;text-align:center;font-size:18px;padding:10px;border-radius:10px}
+
+    /* submit btn */
+    .submit{position:relative;overflow:hidden;border-radius:12px;padding:12px 18px;border:none;background:linear-gradient(90deg,var(--neon1),var(--neon2));color:white;font-weight:800;cursor:pointer;font-size:15px;transition:transform .18s ease,box-shadow .18s ease}
+    .submit:hover{transform:translateY(-6px);box-shadow:0 18px 60px rgba(124,77,255,0.16)}
+
+    /* explosion dots for button */
+    .explosion{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}
+
+    /* preview */
+    #previewHolder img{width:120px;height:120px;object-fit:cover;border-radius:12px;box-shadow:0 14px 40px rgba(2,6,23,0.6)}
+
+    /* success full-screen confetti layer */
+    .confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:9999}
+
+    /* tilt effect */
+    .tilt{transform-style:preserve-3d;transition:transform .15s cubic-bezier(.2,.9,.3,1)}
+
+    /* footer small */
+    .small{font-size:12px;color:rgba(255,255,255,0.55)}
+
+    /* responsive */
+    @media (max-width:880px){.card{grid-template-columns:1fr}.left{order:2;text-align:center}.right{order:1}.grid{grid-template-columns:1fr}.otp input{width:48px}}
+  </style>
+</head>
+<body>
+
+  <canvas id="particles"></canvas>
+  <div class="wrap">
+    <div class="card tilt" id="card">
+
+      <div class="left">
+        <div class="logo"><img src="/mnt/data/3888fa00-114e-4540-8175-4fc0c01f2df8.png" alt="logo"></div>
+        <div class="animated-title">Khatarnak Form — Full Effects</div>
+        <div class="headline">All-in-one demo</div>
+        <div class="sub">Neon glow, tilt, particles, confetti, explosion, OTP, login/signup switch — sab kuch.</div>
+
+        <div class="features">
+          <div class="feature"><span class="dot"></span> Neon & gradients</div>
+          <div class="feature"><span class="dot"></span> 3D tilt on mouse move</div>
+          <div class="feature"><span class="dot"></span> Particle background + confetti</div>
+        </div>
+
+        <div style="margin-top:auto;display:flex;gap:8px;align-items:center;justify-content:flex-start">
+          <div style="font-size:12px;color:rgba(255,255,255,0.6)">Made for practice</div>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="toggle" role="tablist">
+          <button id="btnSignup" class="active" aria-pressed="true">Signup</button>
+          <button id="btnLogin" aria-pressed="false">Login</button>
+        </div>
+
+        <!-- Signup form -->
+        <form id="signupForm" class="tilt" action="#" method="POST" enctype="multipart/form-data" autocomplete="off">
+          <div class="grid">
+            <div class="field">
+              <input type="text" id="name" name="name" placeholder=" " required>
+              <label class="floating">Full name</label>
+            </div>
+            <div class="field">
+              <input type="email" id="email" name="email" placeholder=" " required>
+              <label class="floating">Email address</label>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <input type="password" id="password" name="password" placeholder=" " required minlength="6">
+              <label class="floating">Create password</label>
+            </div>
+            <div class="field">
+              <input type="tel" id="phone" name="phone" placeholder=" " pattern="[0-9]{10}">
+              <label class="floating">Phone (10 digits)</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <textarea id="about" name="about" rows="3" placeholder=" "></textarea>
+            <label class="floating">About you</label>
+          </div>
+
+          <div class="field">
+            <label class="small">Upload avatar</label>
+            <input type="file" id="avatar" name="avatar" accept="image/*">
+          </div>
+
+          <div id="previewHolder" style="display:none;margin-top:6px"></div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div class="small">We respect your privacy.</div>
+            <div style="position:relative">
+              <button class="submit" id="submitBtn" type="submit">Create account</button>
+              <div class="explosion" id="explosion"></div>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- Login form (hidden) -->
+        <form id="loginForm" class="tilt" action="#" method="POST" style="display:none">
+          <div class="field">
+            <input type="email" id="loginEmail" name="loginEmail" placeholder=" " required>
+            <label class="floating">Email address</label>
+          </div>
+          <div class="field">
+            <input type="password" id="loginPassword" name="loginPassword" placeholder=" " required>
+            <label class="floating">Password</label>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div class="small">Or login with OTP</div>
+            <button class="submit" id="loginBtn" type="submit">Login</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small">Or enter OTP</label>
+            <div class="otp">
+              <input type="text" maxlength="1" class="otp-input">
+              <input type="text" maxlength="1" class="otp-input">
+              <input type="text" maxlength="1" class="otp-input">
+              <input type="text" maxlength="1" class="otp-input">
+            </div>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- confetti layer -->
+  <div id="confetti" class="confetti-layer" aria-hidden="true"></div>
+
+  <script>
+    // Elements
+    const card = document.getElementById('card');
+    const btnSignup = document.getElementById('btnSignup');
+    const btnLogin = document.getElementById('btnLogin');
+    const signupForm = document.getElementById('signupForm');
+    const loginForm = document.getElementById('loginForm');
+    const avatar = document.getElementById('avatar');
+    const preview = document.getElementById('previewHolder');
+    const submitBtn = document.getElementById('submitBtn');
+    const explosion = document.getElementById('explosion');
+    const confettiLayer = document.getElementById('confetti');
+
+    // Toggle forms
+    btnSignup.addEventListener('click', ()=>{btnSignup.classList.add('active');btnSignup.setAttribute('aria-pressed','true');btnLogin.classList.remove('active');btnLogin.setAttribute('aria-pressed','false');signupForm.style.display='flex';loginForm.style.display='none'});
+    btnLogin.addEventListener('click', ()=>{btnLogin.classList.add('active');btnLogin.setAttribute('aria-pressed','true');btnSignup.classList.remove('active');btnSignup.setAttribute('aria-pressed','false');signupForm.style.display='none';loginForm.style.display='flex'});
+
+    // Avatar preview
+    avatar.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file){preview.style.display='none';preview.innerHTML='';return}
+      if(!file.type.startsWith('image/')){alert('Please upload image');avatar.value='';return}
+      const img = document.createElement('img');img.src = URL.createObjectURL(file);img.onload = ()=> URL.revokeObjectURL(img.src);
+      preview.innerHTML='';preview.appendChild(img);preview.style.display='block';
+    });
+
+    // Button explosion effect
+    function createExplosion(x,y){explosion.innerHTML='';for(let i=0;i<18;i++){const d=document.createElement('div');d.style.position='absolute';d.style.left='0';d.style.top='0';d.style.width='8px';d.style.height='8px';d.style.borderRadius='2px';d.style.background=['#ff4d6d','#ffd166','#6ee7b7','#60a5fa'][Math.floor(Math.random()*4)];explosion.appendChild(d);const angle=Math.random()*Math.PI*2;const dist=40+Math.random()*80;d.animate([{transform:`translate(${0}px,${0}px) scale(1)`,opacity:1},{transform:`translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0.6)`,opacity:0}],{duration:700+Math.random()*400,easing:'cubic-bezier(.2,.9,.3,1)'});setTimeout(()=>d.remove(),1400);} }
+
+    submitBtn.addEventListener('click',(e)=>{
+      // small validation
+      const name = document.getElementById('name').value.trim();
+      if(name.length<2){alert('Enter valid name');return}
+      // create explosion at button center
+      const rect = submitBtn.getBoundingClientRect();
+      createExplosion(rect.left+rect.width/2,rect.top+rect.height/2);
+      // full screen confetti
+      launchConfetti();
+      // temporary success glow
+      submitBtn.animate([{transform:'scale(1)'},{transform:'scale(1.06)'}],{duration:360,fill:'forwards'});
+      // reset form after a bit
+      setTimeout(()=>{signupForm.reset();preview.style.display='none'},1400);
+    });
+
+    // Particle background (canvas)
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W=canvas.width=innerWidth, H=canvas.height=innerHeight;window.addEventListener('resize', ()=>{W=canvas.width=innerWidth;H=canvas.height=innerHeight});
+    const particles=[];for(let i=0;i<80;i++){particles.push({x:Math.random()*W,y:Math.random()*H, vx:(Math.random()-0.5)*0.6, vy:(Math.random()-0.5)*0.6, r:2+Math.random()*3, color:['rgba(124,77,255,0.12)','rgba(96,165,250,0.08)','rgba(255,77,109,0.06)'][Math.floor(Math.random()*3)]})}
+    function draw(){ctx.clearRect(0,0,W,H);for(const p of particles){ctx.beginPath();ctx.fillStyle=p.color;ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0}requestAnimationFrame(draw)}draw();
+
+    // Confetti launcher (circles/rects)
+    function launchConfetti(){const container = confettiLayer;for(let i=0;i<120;i++){const el=document.createElement('div');el.style.position='fixed';el.style.left=(20+Math.random()*60)+'%';el.style.top=(0)+'%';const size=6+Math.random()*12;el.style.width=size+'px';el.style.height=size+'px';el.style.zIndex=9999;el.style.borderRadius=Math.random()>0.5?'50%':'2px';el.style.background=['#ff4d6d','#ffd166','#6ee7b7','#60a5fa'][Math.floor(Math.random()*4)];container.appendChild(el);const dx=(Math.random()-0.5)*400;const dy=600+Math.random()*400;const rot = (Math.random()-0.5)*720;el.animate([{transform:`translateY(0px) rotate(0deg)`,opacity:1},{transform:`translate(${dx}px,${dy}px) rotate(${rot}deg)`,opacity:0}],{duration:1000+Math.random()*1300,easing:'cubic-bezier(.2,.9,.3,1)'});setTimeout(()=>el.remove(),2200);} }
+
+    // 3D tilt effect
+    document.addEventListener('mousemove',(e)=>{
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width/2; const cy = rect.top + rect.height/2; const dx = e.clientX - cx; const dy = e.clientY - cy; const tiltX = (dy/rect.height)*-8; const tiltY = (dx/rect.width)*8; card.style.transform = `perspective(1100px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+    });
+    document.addEventListener('mouseleave',()=>{card.style.transform='perspective(1100px) rotateX(0deg) rotateY(0deg)'});
+
+    // small focus neon effect
+    document.querySelectorAll('input,textarea,select').forEach(el=>{el.addEventListener('focus',()=>el.classList.add('neon-focus'));el.addEventListener('blur',()=>el.classList.remove('neon-focus'))});
+
+    // OTP auto move
+    document.querySelectorAll('.otp-input').forEach((inp,i,arr)=>{inp.addEventListener('input',()=>{if(inp.value.length>0 && i<arr.length-1) arr[i+1].focus();});inp.addEventListener('keydown',e=>{if(e.key==='Backspace' && !inp.value && i>0) arr[i-1].focus()})});
+
+    // small accessibility: keyboard toggle
+    btnSignup.addEventListener('keydown',e=>{if(e.key==='Enter' || e.key===' ') btnSignup.click()});btnLogin.addEventListener('keydown',e=>{if(e.key==='Enter' || e.key===' ') btnLogin.click()});
+
+  </script>
+</body>
+</html>
